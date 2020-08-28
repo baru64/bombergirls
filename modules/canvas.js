@@ -14,7 +14,7 @@ class Canvas {
     this.ctx.fillRect(0,0, this.width, this.height);
   }
 
-  drawSprite(x, y, sprite) {
+  drawTile(x, y, sprite) {
     this.ctx.drawImage(
       this.sprites,
       // sprite selection
@@ -23,6 +23,20 @@ class Canvas {
       this.sprite_size, this.sprite_size,
       // sprite position on canvas
       x*this.sprite_size, y*this.sprite_size,
+      // sprite size on canvas
+      this.sprite_size, this.sprite_size
+    );
+  }
+
+  drawSprite(x, y, sprite) {
+    this.ctx.drawImage(
+      this.sprites,
+      // sprite selection
+      sprite.x*this.sprite_size, sprite.y*this.sprite_size,
+      // sprite size
+      this.sprite_size, this.sprite_size,
+      // sprite position on canvas
+      x, y,
       // sprite size on canvas
       this.sprite_size, this.sprite_size
     );

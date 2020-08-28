@@ -51,7 +51,7 @@ class Tile {
   }
 
   draw(screen) {
-    screen.drawSprite(this.x, this.y, TileSprite[this.type]);
+    screen.drawTile(this.x, this.y, TileSprite[this.type]);
   }
 }
 
@@ -63,7 +63,7 @@ class WallTile extends Tile {
   }
 
   draw(screen) {
-    screen.drawSprite(this.x, this.y, TileSprite[this.type]);
+    screen.drawTile(this.x, this.y, TileSprite[this.type]);
     // if destroy triggered run animation / change sprite
   }
 }
