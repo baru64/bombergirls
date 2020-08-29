@@ -25,7 +25,6 @@ class Map {
             ((i % 2 == 0) && (j % 2 == 0))) {
           this.tiles.push(new Tile(i, j, TileType.Block));
         }
-        // walls !(i > 1 && i < (this.size.x-2) && j > 1 && j < (this.size.y-2))
         else if (!((i < 3 || i > this.size.x-4) && (j < 3 || j > this.size.y-4))) {
           this.tiles.push(new Tile(i, j, TileType.Wall))
         }
