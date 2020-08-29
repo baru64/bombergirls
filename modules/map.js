@@ -68,4 +68,4 @@ class WallTile extends Tile {
   }
 }
 
-export { Map };
+export { Map, TileType };

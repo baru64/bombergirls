@@ -4,9 +4,8 @@ class Player {
     this.x = x;
     this.y = y;
     this.sprite = {x: 0, y: 0};
-    this.moveStep = 4;
+    this.moveStep = 16;
     this.game = null;
-    this.direction = 'down';
     this.isDead = false;
   }
 
@@ -17,7 +16,6 @@ class Player {
   move(direction) {
     switch (direction) {
       case 'up':
-        this.direction =
         if (this.game.movePlayer(this, this.x, this.y-this.moveStep)) {
           this.y -= this.moveStep;
         }
