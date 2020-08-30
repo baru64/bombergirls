@@ -9,9 +9,9 @@ const TileSprite = {
 }
 
 
-class Map {
+class GameMap {
   constructor() {
-    this.tiles = new Array();
+    this.tiles = new Map();
     this.size = {x: 15, y: 13};
     this.generateTiles();
     this.firstDraw = true;
@@ -23,10 +23,10 @@ class Map {
         // blocks
         if (i == 0 || i == (this.size.x-1) || j == 0 || j == (this.size.y-1) ||
             ((i % 2 == 0) && (j % 2 == 0))) {
-          this.tiles.push(new Tile(i, j, TileType.Block));
+          this.tiles.set(j*this.size.x+i, new Tile(i, j, TileType.Block));
         }
         else if (!((i < 3 || i > this.size.x-4) && (j < 3 || j > this.size.y-4))) {
-          this.tiles.push(new Tile(i, j, TileType.Wall))
+          this.tiles.set(j*this.size.x+i, new Tile(i, j, TileType.Wall))
         }
       }
     }
@@ -67,4 +67,4 @@ class WallTile extends Tile {
   }
 }
 
-export { Map, TileType };
+export { GameMap, TileType };

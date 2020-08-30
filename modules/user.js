@@ -19,7 +19,6 @@ class User {
   }
 
   keyboardHandler(e) {
-    console.log(this.player);
     if (this.state = GameState.inGame) {
       switch (e.code) {
         case "ArrowLeft":

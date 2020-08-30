@@ -2,7 +2,7 @@ class Bomb {
   constructor(x, y, game) {
     this.x = x;
     this.y = y;
-    this.sprite = {x: 1, y: 1};
+    this.sprite = {x: 1, y: 0};
     this.game = game;
     this.animationInterval = 5;
     this.animationCounter = this.animationInterval;
@@ -16,7 +16,7 @@ class Bomb {
   draw(screen) {
     this.animationCounter -= 1;
     if (this.animationCounter == 0) this.animate();
-    screen.drawSprite(this.x, this.y, this.sprite);
+    screen.drawTile(this.x, this.y, this.sprite);
     // TODO probably server will decide about explosion and this won't exist
     this.timeout -= 1;
     if (this.timeout == 0) this.explode();

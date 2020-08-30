@@ -12,18 +12,21 @@ const ExplosionElement = {
 
 class ExplosionEffect {
 
-  constructor(x,y) {
+  constructor(x, y, game) {
     this.x = x;
     this.y = y;
+    this.game = game;
     this.sprite = {x: 2, y: 3};
-    this.timeout = 20;
+    this.timeout = 10;
   }
 
   draw(screen) {
     screen.drawTile(this.x, this.y, {
-      this.sprite.x+ExplosionElement.Center.x,
-      this.sprite.y+ExplosionElement.Center.x
+      x: this.sprite.x+ExplosionElement.Center.x,
+      y: this.sprite.y+ExplosionElement.Center.x
     });
+    this.timeout -= 1;
+    if (this.timeout == 0) this.game.effectExpired(this);
   }
 }
 
