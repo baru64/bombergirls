@@ -33,7 +33,7 @@ class GameMap {
   }
 
   draw(screen) {
-    screen.drawRectangle('darkgreen', 0, 0, this.size.x*32, this.size.y*32);
+    screen.drawRectangle('#388700', 0, 0, this.size.x*32, this.size.y*32);
     this.tiles.forEach((tile) => {
       if (this.firstDraw) tile.draw(screen);
       else if (tile.type != TileType.Block) tile.draw(screen);

@@ -1,9 +1,7 @@
 import { GameMap, TileType } from './map.js';
 import { Bomb } from './bomb.js';
-import { ExplosionEffect } from './effects.js';
-// TODO add players to constructor
+import { ExplosionEffect, BurnedWallEffect } from './effects.js';
 // TODO add synchronizer to constructor
-// TODO add effects to constructor
 class Game {
   constructor(players) {
     this.map = new GameMap();
@@ -70,6 +68,16 @@ class Game {
     let explosionEffect = new ExplosionEffect(x, y, this);
     this.effects.push(explosionEffect);
     // kill hit players - synchronizer will tell us to do it anyway
+  }
+
+  destroyWalls(walls) {
+    // walls - array of tile keys
+    for (let i=0; i < walls.length;++i) {
+      let wall = this.map.tiles.get(walls[i]);
+      let burnedWallEffect = new BurnedWallEffect(wall.x, wall.y, this);
+      this.effects.push(burnedWallEffect);
+      this.map.tiles.delete(walls[i]);
+    }
   }
 
   effectExpired(effect) {

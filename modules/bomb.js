@@ -6,7 +6,7 @@ class Bomb {
     this.game = game;
     this.animationInterval = 5;
     this.animationCounter = this.animationInterval;
-    this.timeout = 30;
+    this.timeout = 60;
   }
   animate() {
     this.sprite.x = 1 + ((this.sprite.x+1) % 3); // x = 1,2,3
