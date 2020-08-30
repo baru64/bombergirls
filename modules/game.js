@@ -15,11 +15,11 @@ class Game {
 
   render(screen) {
     this.map.draw(screen);
-    this.players.forEach((player) => {
-      player.draw(screen);
-    });
     this.bombs.forEach((bomb) => {
       bomb.draw(screen);
+    });
+    this.players.forEach((player) => {
+      player.draw(screen);
     });
     this.effects.forEach((effect) => {
       effect.draw(screen);
