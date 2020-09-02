@@ -1,14 +1,15 @@
 const GameState = {
   inGame: 1,
-  inMainMenu: 2,
-  inRoomSelection: 3,
-  inRoomLobby: 4
+  inMainMenu: 2
 }
+
+// note: when state changes ingame->inmainmenu, delete current game and sync
 
 class User {
   constructor(nickname) {
     this.nickname = nickname;
     this.player = null;
+    this.room_id = 0;
     this.state = GameState.inGame;
     this.selectedRoom = 0;
   }
