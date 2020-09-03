@@ -4,7 +4,7 @@ import { ExplosionEffect, BurnedWallEffect } from './effects.js';
 import { UserMoveMessage, UserPlaceBombMessage } from './synchronizer.js';
 import { GameState } from './user.js';
 import { Player } from './player.js';
-// TODO add synchronizer to constructor
+
 class Game {
   constructor(players, sync, user) {
     this.map = new GameMap();
@@ -130,18 +130,26 @@ class Game {
           this.players.push(newPlayer);
           break;
         case ServerMessageType.DelPlayer:
-          // TODO findplayerbyid
+          let index = this.players.findIndex(p => p.id == message.player_id);
+          this.players.splice(index, 1);
           break;
         case ServerMessageType.UpdatePlayer:
-          // TODO findplayerbyid
+          let player = this.players.find(p => p.id == message.player_id);
+          player.id = message.player_id;
+          player.x = message.player_x;
+          player.y = message.player_y;
+          player.stats = message.player_stats;
+          player.isDead = message.is_player_dead;
           break;
         case ServerMessageType.NewBomb:
           let bomb = new Bomb(message.bomb_x, message.bomb_y, this);
           this.bombs.push(bomb);
           break;
         case ServerMessageType.ExplodeBomb:
-          // TODO bomb = findbombbypos()
-          // explosion(bomb, message.bomb_x, message.bomb_y);
+          let bomb = this.bombs.find(
+            bomb => bomb.x == message.bomb_x && bomb.y == message.bomb_y
+          );
+          this.explosion(bomb, message.bomb_x, message.bomb_y);
           break;
         case ServerMessageType.NewGame:
           // new map
