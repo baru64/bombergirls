@@ -20,6 +20,7 @@ function main(screen) {
   function main_loop() {
     screen.clear();
     game.render(screen);
+    game.updateState();
   }
   setInterval(main_loop, 25);
 }

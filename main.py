@@ -1,4 +1,5 @@
 from aiohttp import web, WSMsgType
+from server.messages import UserMessage, ServerMessage, ServerMessageType
 
 # > user sends join
 # > server creates new game and adds new player(socket) to it,
@@ -22,7 +23,16 @@ async def websocket_handler(request):
         if msg.type == WSMsgType.TEXT:
             print(msg.data)
         elif msg.type == WSMsgType.BINARY:
-            print(msg.data.hex())
+            print('- recvd:', msg.data.hex())
+            mesedz = UserMessage.from_binary(msg.data)
+            print(mesedz)
+            print('sending them komends')
+            servmsg = ServerMessage(
+                type=ServerMessageType.NewBomb,
+                bomb_x=1,
+                bomb_y=1
+            )
+            await ws.send_bytes(servmsg.serialize())
         elif msg.type == WSMsgType.ERROR:
             print("error: {}".format(ws.exception()))
     print(">websocket closed")

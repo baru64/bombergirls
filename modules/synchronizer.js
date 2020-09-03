@@ -25,7 +25,7 @@ class UserJoinMessage {
     const buffer = new ArrayBuffer(3);
     const view = new DataView(buffer);
     view.setUint8(0, this.type);
-    view.setUint16(2, this.room_id);
+    view.setUint16(1, this.room_id);
     const encoder = new TextEncoder();
     const encoded_nickname = encoder.encode(this.nickname);
     const data = buffer.concat(encoded_nickname);
@@ -62,8 +62,8 @@ class UserPlaceBombMessage {
     const buffer = new ArrayBuffer(5);
     const view = new DataView(buffer);
     view.setUint8(0, this.type);
-    view.setUint16(1, this.x);
-    view.setUint16(3, this.y);
+    view.setUint8(1, this.x);
+    view.setUint8(2, this.y);
     return buffer;
   }
 }

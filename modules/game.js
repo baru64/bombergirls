@@ -1,7 +1,11 @@
 import { GameMap, TileType } from './map.js';
 import { Bomb } from './bomb.js';
 import { ExplosionEffect, BurnedWallEffect } from './effects.js';
-import { UserMoveMessage, UserPlaceBombMessage } from './synchronizer.js';
+import {
+  UserMoveMessage,
+  UserPlaceBombMessage,
+  ServerMessageType
+} from './synchronizer.js';
 import { GameState } from './user.js';
 import { Player } from './player.js';
 
@@ -101,7 +105,7 @@ class Game {
     // recvMessage until empty
     // apply state changes
     while(this.sync.messagesInQueue()) {
-      let message = recvMessage();
+      let message = this.sync.recvMessage();
       switch (message.type) {
         case ServerMessageType.JoinInfo:
           this.user.room_id = message.room_id;
@@ -142,8 +146,8 @@ class Game {
           player.isDead = message.is_player_dead;
           break;
         case ServerMessageType.NewBomb:
-          let bomb = new Bomb(message.bomb_x, message.bomb_y, this);
-          this.bombs.push(bomb);
+          let new_bomb = new Bomb(message.bomb_x, message.bomb_y, this);
+          this.bombs.push(new_bomb);
           break;
         case ServerMessageType.ExplodeBomb:
           let bomb = this.bombs.find(
