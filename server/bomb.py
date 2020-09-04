@@ -5,6 +5,7 @@ class Bomb:
         self.y = y
         self.timeout = 60
         self.game = game
+        self.strength = 2
 
     def step():
         self.timeout -= timeout

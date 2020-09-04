@@ -49,6 +49,7 @@ class Game:
 
 
     def add_bomb(self, x, y):
+        # TODO check if there is no wall
         for bomb in bombs:
             if bomb.x == x and bomb.y == y:
                 return
@@ -61,9 +62,14 @@ class Game:
         )
         self.messages_to_send.append(msg)
 
-    def explode_bomb(self):
+    def explode_bomb(self, bomb):
         # destroy walls and kill players
         # remove bomb and add message
+        # up
+        # down
+        # left
+        # right
+        
         pass
 
     def remove_player(self, id):
@@ -104,6 +110,11 @@ class Game:
         self.messages_to_send.append(new_player)
         self.players.append(player)
         return player
+
+    def new_game(self):
+        # set new starting positions
+        # reset map and send newgame
+        pass
 
     def update_players(self):
         # send messages to players
