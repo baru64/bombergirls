@@ -124,11 +124,11 @@ class Game {
           let newPlayer = new Player(
             message.player_id,
             message.player_x,
-            message.player.y,
+            message.player_y,
             message.player_color
           );
           newPlayer.stats = message.player_stats;
-          newPlayer.isdead = message.is_player_dead;
+          newPlayer.isDead = (message.is_player_dead == 1);
           newPlayer.nickname = message.player_nickname;
           newPlayer.game = this;
           this.players.push(newPlayer);
@@ -143,7 +143,7 @@ class Game {
           player.x = message.player_x;
           player.y = message.player_y;
           player.stats = message.player_stats;
-          player.isDead = message.is_player_dead;
+          player.isDead = (message.is_player_dead == 1);
           break;
         case ServerMessageType.NewBomb:
           let new_bomb = new Bomb(message.bomb_x, message.bomb_y, this);

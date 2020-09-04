@@ -13,6 +13,7 @@ class Player {
   }
 
   draw(screen) {
+    if (this.isDead) return;
     this.sprite = {x: this.color, y: 6};
     screen.drawSprite(this.x, this.y, this.sprite);
   }

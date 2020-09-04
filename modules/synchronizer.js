@@ -110,7 +110,7 @@ class ServerMessage {
         this.player_x = view.getUint16(3);
         this.player_y = view.getUint16(5);
         this.player_stats = view.getUint8(7);
-        this.is_player_dead = view.getUint8(9);
+        this.is_player_dead = view.getUint8(8);
         break;
       case ServerMessageType.NewBomb:
         this.bomb_x = view.getUint8(1); // tile position

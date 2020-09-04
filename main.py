@@ -18,6 +18,17 @@ async def websocket_handler(request):
     await ws.prepare(request)
 
     print('>websocket opened')
+    newplayer = ServerMessage(
+        type=ServerMessageType.NewPlayer,
+        player_id=1234,
+        player_x=64,
+        player_y=32,
+        player_stats=0,
+        player_color=1,
+        is_player_dead=0,
+        player_nickname='mike'
+    )
+    await ws.send_bytes(newplayer.serialize())
     async for msg in ws:
         print('>msg received')
         if msg.type == WSMsgType.TEXT:
@@ -31,6 +42,15 @@ async def websocket_handler(request):
                 type=ServerMessageType.NewBomb,
                 bomb_x=1,
                 bomb_y=1
+            )
+            await ws.send_bytes(servmsg.serialize())
+            servmsg = ServerMessage(
+                type=ServerMessageType.UpdatePlayer,
+                player_id=1234,
+                player_x=72,
+                player_y=32,
+                player_stats=0,
+                is_player_dead=0,
             )
             await ws.send_bytes(servmsg.serialize())
         elif msg.type == WSMsgType.ERROR:
