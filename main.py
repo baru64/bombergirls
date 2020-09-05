@@ -1,5 +1,14 @@
+from enum import Enum
+import asyncio
 from aiohttp import web, WSMsgType
-from server.messages import UserMessage, ServerMessage, ServerMessageType
+
+from server.game import Game
+from server.messages import (
+    UserMessageParser,
+    UserMessageType,
+    ServerMessage,
+    ServerMessageType
+)
 
 # > user sends join
 # > server creates new game and adds new player(socket) to it,
@@ -11,58 +20,73 @@ from server.messages import UserMessage, ServerMessage, ServerMessageType
 # during a game
 # > when last player leaves game it is destroyed
 
+class SessionState(Enum):
+    NotJoined = 1
+    Joined = 2
+
+class Session:
+
+    def __init__(self, ws):
+        self.ws = ws
+        self.state = SessionState.NotJoined
+        self.player = None
+        self.game = None
+
+
 ROOMS = {} # room_id: game instance
 
-# TODO: creating new game and joining players
 # TODO: preserve state
 
 async def websocket_handler(request):
     ws = web.WebSocketResponse()
     await ws.prepare(request)
-
+    sess = Session(ws)
+    user_parser = UserMessageParser()
     print('>websocket opened')
-    newplayer = ServerMessage(
-        type=ServerMessageType.NewPlayer,
-        player_id=1234,
-        player_x=64,
-        player_y=32,
-        player_stats=0,
-        player_color=1,
-        is_player_dead=0,
-        player_nickname='mike'
-    )
-    await ws.send_bytes(newplayer.serialize())
     async for msg in ws:
         print('>msg received')
         if msg.type == WSMsgType.TEXT:
+            # we shouldn't get those
             print(msg.data)
         elif msg.type == WSMsgType.BINARY:
             print('- recvd:', msg.data.hex())
-            mesedz = UserMessage.from_binary(msg.data)
-            print(mesedz)
-            print('sending them komends')
-            servmsg = ServerMessage(
-                type=ServerMessageType.NewBomb,
-                bomb_x=1,
-                bomb_y=1
-            )
-            await ws.send_bytes(servmsg.serialize())
-            servmsg = ServerMessage(
-                type=ServerMessageType.UpdatePlayer,
-                player_id=1234,
-                player_x=72,
-                player_y=32,
-                player_stats=0,
-                is_player_dead=0
-            )
-            await ws.send_bytes(servmsg.serialize())
+            usermsg = user_parser.from_binary(msg.data)
+            if (sess.state == SessionState.NotJoined and
+                usermsg['type'] == UserMessageType.Join):
+                if usermsg['room_id'] in ROOMS:
+                    sess.player = ROOM[usermsg['room_id']].add_player()
+                    user_parser.player = sess.player
+                    sess.game = ROOM[usermsg['room_id']]
+                    sess.state = SessionState.Joined
+                else:
+                    game = Game()
+                    sess.player = game.add_player(ws)
+                    user_parser.player = sess.player
+                    ROOM[usermsg['room_id']] = game
+                    sess.game = game
+                    sess.state = SessionState.Joined
+            elif sess.state == SessionState.Joined:
+               sess.game.received_messages.append(usermsg)
+
         elif msg.type == WSMsgType.ERROR:
             print("error: {}".format(ws.exception()))
     print(">websocket closed")
     return ws
 
+async def gameserver_loop():
+    while True:
+        for game in ROOMS.values():
+            game.get_inputs()
+            game.step()
+            game.update_players()
+        await asyncio.sleep(0.05)
+
+
 app = web.Application()
 app.add_routes([web.get('/ws', websocket_handler)])
 
 if __name__ == '__main__':
+    loop = asyncio.get_event_loop()
+    task = loop.create_task(gameserver_loop())
+    gameserver = loop.run_until_complete(task)
     web.run_app(app)

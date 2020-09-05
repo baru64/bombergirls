@@ -1,4 +1,5 @@
 import math
+from collections import deque
 
 from .map import GameMap, Tile
 from .bomb import Bomb
@@ -11,8 +12,8 @@ class Game:
         self.players = []
         self.map = GameMap()
         self.bombs = []
-        self.received_messages = []
-        self.messages_to_send = []
+        self.received_messages = deque()
+        self.messages_to_send = deque()
         self.player_move_size = 16
         self.counter = 0
 
@@ -130,7 +131,7 @@ class Game:
         self.messages_to_send.append(del_player)
 
 
-    def add_player(self):
+    def add_player(self, ws):
         starting_pos = [
             (32,32),
             (32*(self.map.size[0]-2),32),
@@ -138,7 +139,7 @@ class Game:
             (32*(self.map.size[0]-2), 32*(self.map.size[1]-2))
         ]
         px, py = starting_pos[len(self.players)]
-        player = Player(self.counter, px, py, len(self.players)+1, 0)
+        player = Player(self.counter, px, py, len(self.players)+1, ws, stats=0)
         self.counter += 1
         new_player = ServerMessage(
             type=ServerMessageType.NewPlayer,
@@ -175,7 +176,7 @@ class Game:
     def update_players(self):
         # send messages to players
         while self.messages_to_send:
-            message = self.messages_to_send.pop()
+            message = self.messages_to_send.popleft()
             for player in self.players:
                 player.send_message(message)
         # update player state
@@ -194,7 +195,7 @@ class Game:
     def get_inputs(self):
         # parse all received messages and apply changes
         while self.received_messages:
-            msg = self.received_messages.pop()
+            msg = self.received_messages.popleft()
             if msg['type'] == UserMessageType.Move:
                 self.move_player(msg['player'], msg['direction'])
             elif msg['type'] == UserMessageType.PlaceBomb:

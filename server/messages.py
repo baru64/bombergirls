@@ -18,7 +18,7 @@ class ServerMessageType(Enum):
 
 class UserMessageParser:
 
-    def __init__(self, player):
+    def __init__(self, player=None):
         self.player = player
 
     def from_binary(self, data: bytes) -> dict:
