@@ -5,5 +5,5 @@ class Player:
         self.x = x
         self.y = y
         self.color = color # 0 - 3
-        self.is_dead = false
+        self.is_dead = False
         self.stats = stats

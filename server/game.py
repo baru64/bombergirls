@@ -64,13 +64,61 @@ class Game:
 
     def explode_bomb(self, bomb):
         # destroy walls and kill players
-        # remove bomb and add message
         # up
+        for i in range(bomb.strength+1):
+            if map.tiles[(bomb.y-i)*self.map.size[0]+bomb.x] == Tile.Empty:
+                for player in self.players:
+                    if (math.ceil(player.x/32) == bomb.x and
+                        math.ceil(player.y/32) == bomb.y-i):
+                       player.is_dead = True
+            elif map.tiles[(bomb.y-i)*self.map.size[0]+bomb.x] == Tile.Wall:
+                 map.tiles[(bomb.y-i)*self.map.size[0]+bomb.x] = Tile.Empty
+                 break
+            elif map.tiles[(bomb.y-i)*self.map.size[0]+bomb.x] == Tile.Block:
+                break
         # down
+        for i in range(bomb.strength):
+            if map.tiles[(bomb.y+i)*self.map.size[0]+bomb.x] == Tile.Empty:
+                for player in self.players:
+                    if (math.ceil(player.x/32) == bomb.x and
+                        math.ceil(player.y/32) == bomb.y+i):
+                       player.is_dead = True
+            elif map.tiles[(bomb.y+i)*self.map.size[0]+bomb.x] == Tile.Wall:
+                 map.tiles[(bomb.y+i)*self.map.size[0]+bomb.x] = Tile.Empty
+                 break
+            elif map.tiles[(bomb.y+i)*self.map.size[0]+bomb.x] == Tile.Block:
+                break
         # left
+        for i in range(bomb.strength+1):
+            if map.tiles[bomb.y*self.map.size[0]+bomb.x-i] == Tile.Empty:
+                for player in self.players:
+                    if (math.ceil(player.x/32) == bomb.x-i and
+                        math.ceil(player.y/32) == bomb.y):
+                       player.is_dead = True
+            elif map.tiles[bomb.y*self.map.size[0]+bomb.x-i] == Tile.Wall:
+                 map.tiles[bomb.y*self.map.size[0]+bomb.x-i] = Tile.Empty
+                 break
+            elif map.tiles[bomb.y*self.map.size[0]+bomb.x-i] == Tile.Block:
+                break
         # right
-        
-        pass
+        for i in range(bomb.strength+1):
+            if map.tiles[bomb.y*self.map.size[0]+bomb.x+i] == Tile.Empty:
+                for player in self.players:
+                    if (math.ceil(player.x/32) == bomb.x+i and
+                        math.ceil(player.y/32) == bomb.y):
+                       player.is_dead = True
+            elif map.tiles[bomb.y*self.map.size[0]+bomb.x+i] == Tile.Wall:
+                 map.tiles[bomb.y*self.map.size[0]+bomb.x+i] = Tile.Empty
+                 break
+            elif map.tiles[bomb.y*self.map.size[0]+bomb.x+i] == Tile.Block:
+                break
+        explode_msg = ServerMessage(
+            type=ServerMessageType.ExplodeBomb,
+            bomb_x=bomb.x,
+            bomb_y=bomb.y
+        )
+        self.bombs.remove(bomb)
+        self.messages_to_send.append(explode_msg)
 
     def remove_player(self, id):
         # remove player and add message
