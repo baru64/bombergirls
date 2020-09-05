@@ -2,7 +2,7 @@ import math
 
 from .map import GameMap, Tile
 from .bomb import Bomb
-from .messages import ServerMessage, ServerMessageType
+from .messages import ServerMessage, ServerMessageType, UserMessageType
 from .player import Player
 
 class Game:
@@ -120,18 +120,13 @@ class Game:
         self.bombs.remove(bomb)
         self.messages_to_send.append(explode_msg)
 
-    def remove_player(self, id):
+    def remove_player(self, player):
         # remove player and add message
-        player = None
-        for p in players:
-            if p.id == id:
-                player = p
-                break
-        players.remove(player)
         del_player = ServerMessage(
             type=ServerMessageType.DelPlayer,
-            player_id=id
+            player_id=player.id
         )
+        players.remove(player)
         self.messages_to_send.append(del_player)
 
 
@@ -161,14 +156,46 @@ class Game:
 
     def new_game(self):
         # set new starting positions
+        starting_pos = [
+            (32,32),
+            (32*(self.map.size[0]-2),32),
+            (32, 32*(self.map.size[1]-2)),
+            (32*(self.map.size[0]-2), 32*(self.map.size[1]-2))
+        ]
+        for idx, player in enumerate(self.players):
+            player.x, player.y = starting_pos[idx]
         # reset map and send newgame
-        pass
+        self.map = Map()
+        new_game_msg = ServerMessage(
+            type=ServerMessageType.NewGame,
+            time_left=120
+        )
+        self.messages_to_send.append(new_game_msg)
 
     def update_players(self):
         # send messages to players
-        pass
-
+        while self.messages_to_send:
+            message = self.messages_to_send.pop()
+            for player in self.players:
+                player.send_message(message)
+        # update player state
+        for player in self.players:
+            update_msg = ServerMessage(
+                type=ServerMessageType.UpdatePlayer,
+                player_id=player.id,
+                player_x=player.x,
+                player_y=player.y,
+                player_stats=player.stats,
+                is_player_dead=player.is_dead
+            )
+            for dest_player in self.players:
+                dest_player.send_message(update_msg)
 
     def get_inputs(self):
         # parse all received messages and apply changes
-        pass
+        while self.received_messages:
+            msg = self.received_messages.pop()
+            if msg['type'] == UserMessageType.Move:
+                self.move_player(msg['player'], msg['direction'])
+            elif msg['type'] == UserMessageType.PlaceBomb:
+                self.add_bomb(msg['bomb_x'], msg['bomb_y'])

@@ -13,6 +13,9 @@ from server.messages import UserMessage, ServerMessage, ServerMessageType
 
 ROOMS = {} # room_id: game instance
 
+# TODO: creating new game and joining players
+# TODO: preserve state
+
 async def websocket_handler(request):
     ws = web.WebSocketResponse()
     await ws.prepare(request)
@@ -50,7 +53,7 @@ async def websocket_handler(request):
                 player_x=72,
                 player_y=32,
                 player_stats=0,
-                is_player_dead=0,
+                is_player_dead=0
             )
             await ws.send_bytes(servmsg.serialize())
         elif msg.type == WSMsgType.ERROR:

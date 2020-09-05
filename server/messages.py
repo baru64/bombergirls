@@ -16,18 +16,23 @@ class ServerMessageType(Enum):
     ExplodeBomb     = 7
     NewGame         = 8
 
-class UserMessage:
+class UserMessageParser:
 
-    @staticmethod
-    def from_binary(data: bytes) -> dict:
+    def __init__(self, player):
+        self.player = player
+
+    def from_binary(self, data: bytes) -> dict:
         message = dict()
-        message['type'] = data[0]
-        if message['type'] == UserMessageType.Join.value:
+        message['player'] = self.player
+        if data[0] == UserMessageType.Join.value:
+            message['type'] = UserMessageType.Join
             message['room_id'] = unpack('!H', data[1:3])
             message['player_nickname'] = data[3:].decode('utf-8')
-        elif message['type'] == UserMessageType.Move.value:
+        elif data[0] == UserMessageType.Move.value:
+            message['type'] = UserMessageType.Move
             message['direction'] = data[1]
-        elif message['type'] == UserMessageType.PlaceBomb.value:
+        elif data[0] == UserMessageType.PlaceBomb.value:
+            message['type'] = UserMessageType.PlaceBomb
             message['bomb_x'] = data[1]
             message['bomb_y'] = data[2]
         return message

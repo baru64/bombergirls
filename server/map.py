@@ -7,7 +7,7 @@ class Tile(Enum):
 
 class GameMap:
 
-    def __init__(self, x=15, y=13, tile_size = 32):
+    def __init__(self, x=15, y=13, tile_size=32):
         self.size = (x, y)
         self.tile_size = tile_size
         self.tiles = []
