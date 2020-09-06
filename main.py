@@ -3,6 +3,7 @@ import asyncio
 from aiohttp import web, WSMsgType
 
 from server.game import Game
+from server.player import Player
 from server.messages import (
     UserMessageParser,
     UserMessageType,
@@ -42,6 +43,8 @@ async def websocket_handler(request):
     await ws.prepare(request)
     sess = Session(ws)
     user_parser = UserMessageParser()
+    # test player
+    # sess.player = Player(1, 32, 32, 1, ws, stats=0)
     print('>websocket opened')
     async for msg in ws:
         print('>msg received')
@@ -49,22 +52,48 @@ async def websocket_handler(request):
             # we shouldn't get those
             print(msg.data)
         elif msg.type == WSMsgType.BINARY:
+            # joininfo = ServerMessage(
+            #         type=ServerMessageType.JoinInfo,
+            #         room_id=1,
+            #         player_id=sess.player.id,
+            #         player_x=sess.player.x,
+            #         player_y=sess.player.y,
+            #         player_stats=sess.player.stats,
+            #         player_color=sess.player.color,
+            #         is_player_dead=sess.player.is_dead,
+            #         time_left=120
+            # )
+            # await sess.player.send_message(joininfo)
             print('- recvd:', msg.data.hex())
             usermsg = user_parser.from_binary(msg.data)
             if (sess.state == SessionState.NotJoined and
                 usermsg['type'] == UserMessageType.Join):
                 if usermsg['room_id'] in ROOMS:
-                    sess.player = ROOM[usermsg['room_id']].add_player()
+                    sess.player = ROOMS[usermsg['room_id']].add_player(ws)
                     user_parser.player = sess.player
-                    sess.game = ROOM[usermsg['room_id']]
+                    sess.game = ROOMS[usermsg['room_id']]
                     sess.state = SessionState.Joined
                 else:
                     game = Game()
                     sess.player = game.add_player(ws)
                     user_parser.player = sess.player
-                    ROOM[usermsg['room_id']] = game
+                    ROOMS[usermsg['room_id']] = game
                     sess.game = game
                     sess.state = SessionState.Joined
+                # TODO send joininfo
+                print(usermsg['room_id'])
+                joininfo = ServerMessage(
+                    type=ServerMessageType.JoinInfo,
+                    room_id=usermsg['room_id'],
+                    player_id=sess.player.id,
+                    player_x=sess.player.x,
+                    player_y=sess.player.y,
+                    player_stats=sess.player.stats,
+                    player_color=sess.player.color,
+                    is_player_dead=sess.player.is_dead,
+                    time_left=120
+                )
+                await sess.player.send_message(joininfo)
             elif sess.state == SessionState.Joined:
                sess.game.received_messages.append(usermsg)
 
@@ -73,12 +102,16 @@ async def websocket_handler(request):
     print(">websocket closed")
     return ws
 
+async def start_background_tasks(app):
+    app['gameserver'] = app.loop.create_task(gameserver_loop())
+
 async def gameserver_loop():
+    print('starting gameserver loop')
     while True:
         for game in ROOMS.values():
             game.get_inputs()
             game.step()
-            game.update_players()
+            await game.update_players()
         await asyncio.sleep(0.05)
 
 
@@ -86,7 +119,5 @@ app = web.Application()
 app.add_routes([web.get('/ws', websocket_handler)])
 
 if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    task = loop.create_task(gameserver_loop())
-    gameserver = loop.run_until_complete(task)
+    app.on_startup.append(start_background_tasks)
     web.run_app(app)

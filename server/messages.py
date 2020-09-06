@@ -26,7 +26,7 @@ class UserMessageParser:
         message['player'] = self.player
         if data[0] == UserMessageType.Join.value:
             message['type'] = UserMessageType.Join
-            message['room_id'] = unpack('!H', data[1:3])
+            message['room_id'] = unpack('!H', data[1:3])[0]
             message['player_nickname'] = data[3:].decode('utf-8')
         elif data[0] == UserMessageType.Move.value:
             message['type'] = UserMessageType.Move

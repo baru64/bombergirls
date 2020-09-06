@@ -17,7 +17,7 @@ class Game:
         self.player_move_size = 16
         self.counter = 0
 
-    def step():
+    def step(self):
         for bomb in self.bombs:
             bomb.step()
 
@@ -32,12 +32,12 @@ class Game:
         elif direction == 4:
             x -= self.player_move_size
         # collision with border blocks
-        if (x < 32 || x > (self.map.size[0]-2)*32
-            || y < 32 || y > (self.map.size[1]-2)*32):
+        if (x < 32 or x > (self.map.size[0]-2)*32
+            or y < 32 or y > (self.map.size[1]-2)*32):
             return
         # collision with inner blocks
-        if ((x-32)%64 < 32+32 && (x-32)%64+32 > 32 &&
-           (y-32)%64 < 32+32 && (y-32)%64+32 > 32):
+        if ((x-32)%64 < 32+32 and (x-32)%64+32 > 32 and
+           (y-32)%64 < 32+32 and (y-32)%64+32 > 32):
             return
         # collision with walls
         tile_x = math.ceil(x / 32)
@@ -144,12 +144,12 @@ class Game:
         new_player = ServerMessage(
             type=ServerMessageType.NewPlayer,
             player_id=self.counter,
-            player_x=64,
-            player_y=32,
-            player_stats=0,
-            player_color=1,
-            is_player_dead=0,
-            player_nickname='mike'
+            player_x=player.x,
+            player_y=player.y,
+            player_stats=player.stats,
+            player_color=player.color,
+            is_player_dead=player.is_dead,
+            player_nickname=player.nickname
         )
         self.messages_to_send.append(new_player)
         self.players.append(player)
@@ -173,7 +173,7 @@ class Game:
         )
         self.messages_to_send.append(new_game_msg)
 
-    def update_players(self):
+    async def update_players(self):
         # send messages to players
         while self.messages_to_send:
             message = self.messages_to_send.popleft()
@@ -190,7 +190,7 @@ class Game:
                 is_player_dead=player.is_dead
             )
             for dest_player in self.players:
-                dest_player.send_message(update_msg)
+                await dest_player.send_message(update_msg)
 
     def get_inputs(self):
         # parse all received messages and apply changes

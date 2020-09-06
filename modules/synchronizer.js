@@ -28,8 +28,10 @@ class UserJoinMessage {
     view.setUint16(1, this.room_id);
     const encoder = new TextEncoder();
     const encoded_nickname = encoder.encode(this.nickname);
-    const data = buffer.concat(encoded_nickname);
-    return data;
+    const data = new Uint8Array(3+16);
+    data.set(new Uint8Array(buffer), 0);
+    data.set(new Uint8Array(encoded_nickname), 3);
+    return data.buffer;
   }
 }
 
@@ -159,12 +161,15 @@ function Queue() {
 }
 
 class Synchronizer {
-  constructor(url) {
+  constructor(url, main_callback) {
     this.ws = new WebSocket(url);
     this.ws.binaryType = "arraybuffer";
     let synchronizer = this;
     this.ws.addEventListener('open', function (event) {
       console.log('websocket open');
+      let join_msg = new UserJoinMessage(1, 'changeme'); // TODO: TEMPORARY FIX
+      console.log('sending join message');
+      synchronizer.sendMessage(join_msg);
     });
     this.ws.addEventListener('close', function (event) {
       console.log('websocket close');
@@ -172,12 +177,16 @@ class Synchronizer {
     this.ws.addEventListener('message', function (event) {
       console.log('message from server:', event.data);
       synchronizer.deserializeMessage(event.data);
+      if (!synchronizer.in_game) main_callback();
     });
     this.receivedMessages = new Queue();
+    this.in_game = false;
   }
 
   sendMessage(message) {
+    console.log("sendmessage");
     if (this.ws.readyState != 1) return; // OPEN = 1, return if not open
+    console.log("ws ready");
     let data = message.serialize();
     this.ws.send(data);
   }
