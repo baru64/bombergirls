@@ -21,7 +21,6 @@ function main(screen) {
     if (!synchronizer.receivedMessages.isEmpty()) {
       let msg = synchronizer.recvMessage();
       if(msg != null && msg.type == ServerMessageType.JoinInfo) {
-        // TODO: create player and game
         player = new Player(msg.player_id, msg.player_x, msg.player_y, msg.player_color);
         player.isDead = msg.is_player_dead;
         player.stats = msg.player_stats;

@@ -149,11 +149,11 @@ class Game:
             (32*(self.map.size[0]-2), 32*(self.map.size[1]-2))
         ]
         px, py = starting_pos[len(self.players)]
-        player = Player(self.counter, px, py, len(self.players)+1, ws, stats=0)
+        player = Player(self.counter, px, py, len(self.players), ws, stats=0)
         self.counter += 1
         new_player = ServerMessage(
             type=ServerMessageType.NewPlayer,
-            player_id=self.counter,
+            player_id=player.id,
             player_x=player.x,
             player_y=player.y,
             player_stats=player.stats,
@@ -161,12 +161,14 @@ class Game:
             is_player_dead=player.is_dead,
             player_nickname=player.nickname
         )
+        logger.info(f'add new player[{player.id}] pos: {player.x} {player.y}')
         self.messages_to_send.append(new_player)
         self.players.append(player)
         return player
 
     def new_game(self):
         # set new starting positions
+        logger.info('starting new game')
         starting_pos = [
             (32, 32),
             (32*(self.map.size[0]-2), 32),

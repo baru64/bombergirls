@@ -60,18 +60,6 @@ async def websocket_handler(request):
             # we shouldn't get those
             logger.info(msg.data)
         elif msg.type == WSMsgType.BINARY:
-            # joininfo = ServerMessage(
-            #         type=ServerMessageType.JoinInfo,
-            #         room_id=1,
-            #         player_id=sess.player.id,
-            #         player_x=sess.player.x,
-            #         player_y=sess.player.y,
-            #         player_stats=sess.player.stats,
-            #         player_color=sess.player.color,
-            #         is_player_dead=sess.player.is_dead,
-            #         time_left=120
-            # )
-            # await sess.player.send_message(joininfo)
             logger.info(f'recvd:{msg.data.hex()}')
             usermsg = user_parser.from_binary(msg.data)
             if (sess.state == SessionState.NotJoined and
@@ -88,7 +76,7 @@ async def websocket_handler(request):
                     ROOMS[usermsg['room_id']] = game
                     sess.game = game
                     sess.state = SessionState.Joined
-                # TODO send joininfo
+                # send joininfo
                 logger.info(f"user joined room id: {usermsg['room_id']}")
                 joininfo = ServerMessage(
                     type=ServerMessageType.JoinInfo,
@@ -102,6 +90,24 @@ async def websocket_handler(request):
                     time_left=120
                 )
                 await sess.player.send_message(joininfo)
+                if len(sess.game.players) > 1:
+                    # add existing players to new players context
+                    logger.info('synchronize players')
+                    for another_player in sess.game.players:
+                        if another_player is not sess.player:
+                            logger.info(f'sync p{another_player.id}'
+                                        f' -> p{sess.player.id}')
+                            sync_player_msg = ServerMessage(
+                                type=ServerMessageType.NewPlayer,
+                                player_id=another_player.id,
+                                player_x=another_player.x,
+                                player_y=another_player.y,
+                                player_stats=another_player.stats,
+                                player_color=another_player.color,
+                                is_player_dead=another_player.is_dead,
+                                player_nickname=another_player.nickname
+                            )
+                            await sess.player.send_message(sync_player_msg)
             elif sess.state == SessionState.Joined:
                 logger.info('received new message from joined player')
                 sess.game.received_messages.append(usermsg)
@@ -109,6 +115,7 @@ async def websocket_handler(request):
         elif msg.type == WSMsgType.ERROR:
             logger.error("error: {}".format(ws.exception()))
     logger.info("websocket closed")
+    # TODO delPlayer?
     return ws
 
 

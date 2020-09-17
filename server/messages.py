@@ -51,7 +51,6 @@ class ServerMessage:
         self.kwargs = kwargs
 
     def serialize(self) -> bytes:
-        logger.info(f'packing: {self.type} {self.kwargs}')
         data = pack('!B', self.type.value)
         if self.type == ServerMessageType.JoinInfo:
             data += pack('!H', self.kwargs['room_id'])

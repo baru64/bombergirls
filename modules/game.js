@@ -70,8 +70,8 @@ class Game {
     let tile_x = Math.floor(x / 32);
     let tile_y = Math.floor(y / 32);
     // when server will be ready move code below to updateState
-    let bomb = new Bomb(tile_x, tile_y, this);
-    this.bombs.push(bomb);
+    // let bomb = new Bomb(tile_x, tile_y, this);
+    // this.bombs.push(bomb);
     // send message to server
     let msg = new UserPlaceBombMessage(tile_x, tile_y);
     this.sync.sendMessage(msg);
@@ -122,6 +122,9 @@ class Game {
           this.user.state = GameState.inMainMenu;
           break;
         case ServerMessageType.NewPlayer:
+          console.log('received new player id:' + message.player_id);
+          console.log('users player id: ' + this.user.player.id);
+          if (message.player_id == this.user.player.id) break;
           let newPlayer = new Player(
             message.player_id,
             message.player_x,
