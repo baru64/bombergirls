@@ -1,6 +1,10 @@
 import math
+import time
 import logging
+from typing import List
 from collections import deque
+
+from aiohttp.web import WebSocketResponse
 
 from .map import GameMap, Tile
 from .bomb import Bomb
@@ -13,19 +17,24 @@ logger = logging.getLogger(__name__)
 class Game:
 
     def __init__(self):
-        self.players = []
-        self.map = GameMap()
-        self.bombs = []
-        self.received_messages = deque()
-        self.messages_to_send = deque()
-        self.player_move_size = 16
-        self.counter = 0
+        self.players: List[Player] = []
+        self.map: GameMap = GameMap()
+        self.bombs: List[Bomb] = []
+        self.received_messages: deque = deque()
+        self.messages_to_send: deque = deque()
+        self.player_move_size: int = 16
+        self.counter: int = 0
+        self.start_time: float = time.time()
+        self.round_length: int = 90  # 90 seconds
 
     def step(self):
         for bomb in self.bombs:
             bomb.step()
+        if time.time() - self.start_time > self.round_length:
+            logger.info('round timeout')
+            self.new_game()
 
-    def move_player(self, player, direction):
+    def move_player(self, player: Player, direction: int):
         x, y = player.x, player.y
         if direction == 1:
             y -= self.player_move_size
@@ -52,7 +61,7 @@ class Game:
         player.x = x
         player.y = y
 
-    def add_bomb(self, x, y):
+    def add_bomb(self, x: int, y: int):
         # TODO check if there is no wall
         for bomb in self.bombs:
             if bomb.x == x and bomb.y == y:
@@ -66,7 +75,7 @@ class Game:
         )
         self.messages_to_send.append(msg)
 
-    def explode_bomb(self, bomb):
+    def explode_bomb(self, bomb: Bomb):
         # destroy walls and kill players
         # up
         for i in range(bomb.strength+1):
@@ -131,8 +140,23 @@ class Game:
         )
         self.bombs.remove(bomb)
         self.messages_to_send.append(explode_msg)
+        # check players left
+        players_alive = 0
+        if len(self.players) == 1 and self.players[0].is_dead:
+            self.new_game()
+        elif len(self.players) > 1:
+            for player in self.players:
+                if not player.is_dead:
+                    players_alive += 1
+            if players_alive == 1:
+                for player in self.players:
+                    if not player.is_dead:
+                        player.stats += 1
+                        self.new_game()
+            elif players_alive == 0:
+                self.new_game()
 
-    def remove_player(self, player):
+    def remove_player(self, player: Player):
         # remove player and add message
         del_player = ServerMessage(
             type=ServerMessageType.DelPlayer,
@@ -141,7 +165,7 @@ class Game:
         self.players.remove(player)
         self.messages_to_send.append(del_player)
 
-    def add_player(self, ws):
+    def add_player(self, ws: WebSocketResponse) -> Player:
         starting_pos = [
             (32, 32),
             (32*(self.map.size[0]-2), 32),
@@ -150,6 +174,8 @@ class Game:
         ]
         px, py = starting_pos[len(self.players)]
         player = Player(self.counter, px, py, len(self.players), ws, stats=0)
+        if len(self.players) > 1:
+            player.is_dead = True
         self.counter += 1
         new_player = ServerMessage(
             type=ServerMessageType.NewPlayer,
@@ -177,13 +203,18 @@ class Game:
         ]
         for idx, player in enumerate(self.players):
             player.x, player.y = starting_pos[idx]
+            player.is_dead = False
         # reset map and send newgame
         self.map = GameMap()
         new_game_msg = ServerMessage(
             type=ServerMessageType.NewGame,
-            time_left=120
+            time_left=self.round_length
         )
         self.messages_to_send.append(new_game_msg)
+        # reset timer
+        self.start_time = time.time()
+        # reset bombs
+        self.bombs = []
 
     async def update_players(self):
         # send messages to players

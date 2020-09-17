@@ -9,6 +9,11 @@ import {
 import { GameState } from './user.js';
 import { Player } from './player.js';
 
+
+function time_now() {
+  return Date.now() / 1000;
+}
+
 class Game {
   constructor(players, sync, user) {
     this.map = new GameMap();
@@ -20,7 +25,46 @@ class Game {
     });
     this.bombs = new Array();
     this.effects = new Array();
-    this.time_left = 0; // TODO how to measure time
+    this.time_left = 90;
+    this.start_time = time_now();
+  }
+
+  drawScore(screen) {
+    let dx = screen.sprite_size * this.map.size.x + 20;
+    let dy = 30;
+    let offset = 70;
+    this.players.forEach((player) => {
+      let color = 'black'
+      switch(player.color) {
+        case 0:
+          color = 'aqua';
+          break;
+        case 1:
+          color = 'lime';
+          break;
+        case 2:
+          color = 'deeppink';
+          break;
+        case 3:
+          color = 'orange';
+          break;
+      }
+      screen.drawRectangle('black', dx-8, dy-18, 172, 62);
+      screen.drawRectangle(color, dx-10, dy-20, 170, 60);
+      screen.drawText('16px sans', 'white', dx, dy+5, player.nickname);
+      screen.drawText('16px sans', 'white', dx, dy+25,
+        'score: ' + player.stats);
+      if (player.isDead)
+        screen.drawText('40px serif', 'red', dx+10, dy+25, 'DEAD');
+      dy = dy + offset;
+    });
+  }
+
+  drawTime(screen) {
+    let seconds_left = this.time_left - Math.floor(time_now() - this.start_time);
+    console.log(seconds_left);
+    screen.drawText('28px sans', 'red',
+      screen.width/2 - 20, screen.height - 8, seconds_left);
   }
 
   render(screen) {
@@ -34,6 +78,8 @@ class Game {
     this.effects.forEach((effect) => {
       effect.draw(screen);
     });
+    this.drawScore(screen);
+    this.drawTime(screen);
   }
 
   movePlayer(player, x, y, direction) {
@@ -163,6 +209,7 @@ class Game {
           // new map
           this.map = new GameMap();
           this.time_left = message.time_left;
+          this.start_time = time_now();
           break;
       }
     }

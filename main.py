@@ -2,6 +2,7 @@ from enum import Enum
 import asyncio
 import logging
 import sys
+import time
 
 from aiohttp import web, WSMsgType
 
@@ -87,7 +88,8 @@ async def websocket_handler(request):
                     player_stats=sess.player.stats,
                     player_color=sess.player.color,
                     is_player_dead=sess.player.is_dead,
-                    time_left=120
+                    time_left=int(sess.game.round_length
+                                  - (time.time() - sess.game.start_time))
                 )
                 await sess.player.send_message(joininfo)
                 if len(sess.game.players) > 1:
@@ -116,6 +118,7 @@ async def websocket_handler(request):
             logger.error("error: {}".format(ws.exception()))
     logger.info("websocket closed")
     # TODO delPlayer?
+    # set player to disconected, if disconected until new_game delete
     return ws
 
 

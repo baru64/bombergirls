@@ -10,7 +10,7 @@ class Canvas {
   }
 
   clear() {
-    this.ctx.fillStyle = "darkblue";
+    this.ctx.fillStyle = "teal";
     this.ctx.fillRect(0,0, this.width, this.height);
   }
 
@@ -40,6 +40,14 @@ class Canvas {
       // sprite size on canvas
       this.sprite_size, this.sprite_size
     );
+  }
+
+  drawText(font, color, x, y, text, strokeColor = 'black') {
+    this.ctx.strokeStyle = strokeColor;
+    this.ctx.fillStyle = color;
+    this.ctx.font = font;
+    this.ctx.strokeText(text, x+1, y+1);
+    this.ctx.fillText(text, x, y);
   }
 
   drawRectangle(color, x, y, width, heigth) {

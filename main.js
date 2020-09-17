@@ -24,7 +24,9 @@ function main(screen) {
         player = new Player(msg.player_id, msg.player_x, msg.player_y, msg.player_color);
         player.isDead = msg.is_player_dead;
         player.stats = msg.player_stats;
+        player.nickname = '123456789abcdef';
         game = new Game([player], synchronizer, user);
+        game.time_left = msg.time_left;
         synchronizer.in_game = true;
       }
     }
@@ -45,7 +47,7 @@ function main(screen) {
   setInterval(main_loop, 25);
 }
 
-let screen = new Canvas('canvas', document.body, 600, 450);
+let screen = new Canvas('canvas', document.body, 700, 450);
 
 screen.create();
 function main_callback() {

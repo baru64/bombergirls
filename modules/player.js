@@ -18,26 +18,27 @@ class Player {
     screen.drawSprite(this.x, this.y, this.sprite);
   }
 
+  // TODO refactor or change movement to remove lag
   move(direction) {
     switch (direction) {
       case 'up':
         if (this.game.movePlayer(this, this.x, this.y-this.moveStep, direction)) {
-          this.y -= this.moveStep;
+          // this.y -= this.moveStep;
         }
         break;
       case 'down':
         if (this.game.movePlayer(this, this.x, this.y+this.moveStep, direction)) {
-          this.y += this.moveStep;
+          // this.y += this.moveStep;
         }
         break;
       case 'left':
         if (this.game.movePlayer(this, this.x-this.moveStep, this.y, direction)) {
-          this.x -= this.moveStep;
+          // this.x -= this.moveStep;
         }
         break;
       case 'right':
         if (this.game.movePlayer(this, this.x+this.moveStep, this.y, direction)) {
-          this.x += this.moveStep;
+          // this.x += this.moveStep;
         }
         break;
     }
