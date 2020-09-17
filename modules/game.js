@@ -56,6 +56,7 @@ class Game {
     if (tile !== undefined && tile.type == TileType.Wall) return false;
     // send message to server
     let msg = new UserMoveMessage(direction);
+    console.log('movePlayer: sendMessage');
     this.sync.sendMessage(msg);
     return true;
   }

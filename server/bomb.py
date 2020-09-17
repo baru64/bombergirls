@@ -7,7 +7,7 @@ class Bomb:
         self.game = game
         self.strength = 2
 
-    def step():
-        self.timeout -= timeout
+    def step(self):
+        self.timeout -= self.timeout
         if self.timeout == 0:
-            self.game.explode_bomb(this, x, y)
+            self.game.explode_bomb(self)

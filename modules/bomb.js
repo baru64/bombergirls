@@ -18,8 +18,8 @@ class Bomb {
     if (this.animationCounter == 0) this.animate();
     screen.drawTile(this.x, this.y, this.sprite);
     // TODO probably server will decide about explosion and this won't exist
-    this.timeout -= 1;
-    if (this.timeout == 0) this.explode();
+    // this.timeout -= 1;
+    // if (this.timeout == 0) this.explode();
   }
 
   explode() {

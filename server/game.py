@@ -1,10 +1,14 @@
 import math
+import logging
 from collections import deque
 
 from .map import GameMap, Tile
 from .bomb import Bomb
 from .messages import ServerMessage, ServerMessageType, UserMessageType
 from .player import Player
+
+logger = logging.getLogger(__name__)
+
 
 class Game:
 
@@ -33,29 +37,28 @@ class Game:
             x -= self.player_move_size
         # collision with border blocks
         if (x < 32 or x > (self.map.size[0]-2)*32
-            or y < 32 or y > (self.map.size[1]-2)*32):
+                or y < 32 or y > (self.map.size[1]-2)*32):
             return
         # collision with inner blocks
-        if ((x-32)%64 < 32+32 and (x-32)%64+32 > 32 and
-           (y-32)%64 < 32+32 and (y-32)%64+32 > 32):
+        if ((x-32) % 64 < 32+32 and (x-32) % 64+32 > 32 and
+           (y-32) % 64 < 32+32 and (y-32) % 64+32 > 32):
             return
         # collision with walls
         tile_x = math.ceil(x / 32)
         tile_y = math.ceil(y / 32)
-        if self.map.tiles[tile_y*map.size[0]+tile_x] != Tile.Empty:
+        if self.map.tiles[tile_y*self.map.size[0]+tile_x] != Tile.Empty:
             return
         # move
         player.x = x
         player.y = y
 
-
     def add_bomb(self, x, y):
         # TODO check if there is no wall
-        for bomb in bombs:
+        for bomb in self.bombs:
             if bomb.x == x and bomb.y == y:
                 return
-        bomb = Bomb(x, y, self)
-        self.bombs.append(bomb)
+        new_bomb = Bomb(x, y, self)
+        self.bombs.append(new_bomb)
         msg = ServerMessage(
             type=ServerMessageType.NewBomb,
             bomb_x=x,
@@ -67,51 +70,59 @@ class Game:
         # destroy walls and kill players
         # up
         for i in range(bomb.strength+1):
-            if map.tiles[(bomb.y-i)*self.map.size[0]+bomb.x] == Tile.Empty:
+            if (self.map.tiles[(bomb.y-i)*self.map.size[0]+bomb.x]
+                    == Tile.Empty):
                 for player in self.players:
                     if (math.ceil(player.x/32) == bomb.x and
-                        math.ceil(player.y/32) == bomb.y-i):
-                       player.is_dead = True
-            elif map.tiles[(bomb.y-i)*self.map.size[0]+bomb.x] == Tile.Wall:
-                 map.tiles[(bomb.y-i)*self.map.size[0]+bomb.x] = Tile.Empty
-                 break
-            elif map.tiles[(bomb.y-i)*self.map.size[0]+bomb.x] == Tile.Block:
+                            math.ceil(player.y/32) == bomb.y-i):
+                        player.is_dead = True
+            elif (self.map.tiles[(bomb.y-i)*self.map.size[0]+bomb.x]
+                  == Tile.Wall):
+                self.map.tiles[(bomb.y-i)*self.map.size[0]+bomb.x] = Tile.Empty
+                break
+            elif (self.map.tiles[(bomb.y-i)*self.map.size[0]+bomb.x]
+                  == Tile.Block):
                 break
         # down
         for i in range(bomb.strength):
-            if map.tiles[(bomb.y+i)*self.map.size[0]+bomb.x] == Tile.Empty:
+            if (self.map.tiles[(bomb.y+i)*self.map.size[0]+bomb.x]
+                    == Tile.Empty):
                 for player in self.players:
                     if (math.ceil(player.x/32) == bomb.x and
-                        math.ceil(player.y/32) == bomb.y+i):
-                       player.is_dead = True
-            elif map.tiles[(bomb.y+i)*self.map.size[0]+bomb.x] == Tile.Wall:
-                 map.tiles[(bomb.y+i)*self.map.size[0]+bomb.x] = Tile.Empty
-                 break
-            elif map.tiles[(bomb.y+i)*self.map.size[0]+bomb.x] == Tile.Block:
+                            math.ceil(player.y/32) == bomb.y+i):
+                        player.is_dead = True
+            elif (self.map.tiles[(bomb.y+i)*self.map.size[0]+bomb.x]
+                  == Tile.Wall):
+                self.map.tiles[(bomb.y+i)*self.map.size[0]+bomb.x] = Tile.Empty
+                break
+            elif (self.map.tiles[(bomb.y+i)*self.map.size[0]+bomb.x]
+                  == Tile.Block):
                 break
         # left
         for i in range(bomb.strength+1):
-            if map.tiles[bomb.y*self.map.size[0]+bomb.x-i] == Tile.Empty:
+            if self.map.tiles[bomb.y*self.map.size[0]+bomb.x-i] == Tile.Empty:
                 for player in self.players:
                     if (math.ceil(player.x/32) == bomb.x-i and
-                        math.ceil(player.y/32) == bomb.y):
-                       player.is_dead = True
-            elif map.tiles[bomb.y*self.map.size[0]+bomb.x-i] == Tile.Wall:
-                 map.tiles[bomb.y*self.map.size[0]+bomb.x-i] = Tile.Empty
-                 break
-            elif map.tiles[bomb.y*self.map.size[0]+bomb.x-i] == Tile.Block:
+                            math.ceil(player.y/32) == bomb.y):
+                        player.is_dead = True
+            elif self.map.tiles[bomb.y*self.map.size[0]+bomb.x-i] == Tile.Wall:
+                self.map.tiles[bomb.y*self.map.size[0]+bomb.x-i] = Tile.Empty
+                break
+            elif (self.map.tiles[bomb.y*self.map.size[0]+bomb.x-i]
+                  == Tile.Block):
                 break
         # right
         for i in range(bomb.strength+1):
-            if map.tiles[bomb.y*self.map.size[0]+bomb.x+i] == Tile.Empty:
+            if self.map.tiles[bomb.y*self.map.size[0]+bomb.x+i] == Tile.Empty:
                 for player in self.players:
                     if (math.ceil(player.x/32) == bomb.x+i and
-                        math.ceil(player.y/32) == bomb.y):
-                       player.is_dead = True
-            elif map.tiles[bomb.y*self.map.size[0]+bomb.x+i] == Tile.Wall:
-                 map.tiles[bomb.y*self.map.size[0]+bomb.x+i] = Tile.Empty
-                 break
-            elif map.tiles[bomb.y*self.map.size[0]+bomb.x+i] == Tile.Block:
+                            math.ceil(player.y/32) == bomb.y):
+                        player.is_dead = True
+            elif self.map.tiles[bomb.y*self.map.size[0]+bomb.x+i] == Tile.Wall:
+                self.map.tiles[bomb.y*self.map.size[0]+bomb.x+i] = Tile.Empty
+                break
+            elif (self.map.tiles[bomb.y*self.map.size[0]+bomb.x+i]
+                  == Tile.Block):
                 break
         explode_msg = ServerMessage(
             type=ServerMessageType.ExplodeBomb,
@@ -127,14 +138,13 @@ class Game:
             type=ServerMessageType.DelPlayer,
             player_id=player.id
         )
-        players.remove(player)
+        self.players.remove(player)
         self.messages_to_send.append(del_player)
-
 
     def add_player(self, ws):
         starting_pos = [
-            (32,32),
-            (32*(self.map.size[0]-2),32),
+            (32, 32),
+            (32*(self.map.size[0]-2), 32),
             (32, 32*(self.map.size[1]-2)),
             (32*(self.map.size[0]-2), 32*(self.map.size[1]-2))
         ]
@@ -158,15 +168,15 @@ class Game:
     def new_game(self):
         # set new starting positions
         starting_pos = [
-            (32,32),
-            (32*(self.map.size[0]-2),32),
+            (32, 32),
+            (32*(self.map.size[0]-2), 32),
             (32, 32*(self.map.size[1]-2)),
             (32*(self.map.size[0]-2), 32*(self.map.size[1]-2))
         ]
         for idx, player in enumerate(self.players):
             player.x, player.y = starting_pos[idx]
         # reset map and send newgame
-        self.map = Map()
+        self.map = GameMap()
         new_game_msg = ServerMessage(
             type=ServerMessageType.NewGame,
             time_left=120
@@ -178,7 +188,7 @@ class Game:
         while self.messages_to_send:
             message = self.messages_to_send.popleft()
             for player in self.players:
-                player.send_message(message)
+                await player.send_message(message)
         # update player state
         for player in self.players:
             update_msg = ServerMessage(
@@ -194,9 +204,13 @@ class Game:
 
     def get_inputs(self):
         # parse all received messages and apply changes
+        logger.info('get_inputs')
         while self.received_messages:
+            logger.info('received user input')
             msg = self.received_messages.popleft()
             if msg['type'] == UserMessageType.Move:
+                logger.info(f'received move message: {msg}')
                 self.move_player(msg['player'], msg['direction'])
             elif msg['type'] == UserMessageType.PlaceBomb:
+                logger.info(f'received new bomb message: {msg}')
                 self.add_bomb(msg['bomb_x'], msg['bomb_y'])

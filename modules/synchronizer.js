@@ -186,7 +186,6 @@ class Synchronizer {
   sendMessage(message) {
     console.log("sendmessage");
     if (this.ws.readyState != 1) return; // OPEN = 1, return if not open
-    console.log("ws ready");
     let data = message.serialize();
     this.ws.send(data);
   }

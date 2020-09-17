@@ -1,15 +1,20 @@
 from enum import Enum
 import asyncio
+import logging
+import sys
+
 from aiohttp import web, WSMsgType
 
 from server.game import Game
-from server.player import Player
+# from server.player import Player
 from server.messages import (
     UserMessageParser,
     UserMessageType,
     ServerMessage,
     ServerMessageType
 )
+
+logger = logging.getLogger(__name__)
 
 # > user sends join
 # > server creates new game and adds new player(socket) to it,
@@ -21,9 +26,11 @@ from server.messages import (
 # during a game
 # > when last player leaves game it is destroyed
 
+
 class SessionState(Enum):
     NotJoined = 1
     Joined = 2
+
 
 class Session:
 
@@ -34,9 +41,10 @@ class Session:
         self.game = None
 
 
-ROOMS = {} # room_id: game instance
+ROOMS = {}  # room_id: game instance
 
 # TODO: preserve state
+
 
 async def websocket_handler(request):
     ws = web.WebSocketResponse()
@@ -45,12 +53,12 @@ async def websocket_handler(request):
     user_parser = UserMessageParser()
     # test player
     # sess.player = Player(1, 32, 32, 1, ws, stats=0)
-    print('>websocket opened')
+    logger.info('websocket opened')
     async for msg in ws:
-        print('>msg received')
+        logger.info('msg received')
         if msg.type == WSMsgType.TEXT:
             # we shouldn't get those
-            print(msg.data)
+            logger.info(msg.data)
         elif msg.type == WSMsgType.BINARY:
             # joininfo = ServerMessage(
             #         type=ServerMessageType.JoinInfo,
@@ -64,10 +72,10 @@ async def websocket_handler(request):
             #         time_left=120
             # )
             # await sess.player.send_message(joininfo)
-            print('- recvd:', msg.data.hex())
+            logger.info(f'recvd:{msg.data.hex()}')
             usermsg = user_parser.from_binary(msg.data)
             if (sess.state == SessionState.NotJoined and
-                usermsg['type'] == UserMessageType.Join):
+                    usermsg['type'] == UserMessageType.Join):
                 if usermsg['room_id'] in ROOMS:
                     sess.player = ROOMS[usermsg['room_id']].add_player(ws)
                     user_parser.player = sess.player
@@ -81,7 +89,7 @@ async def websocket_handler(request):
                     sess.game = game
                     sess.state = SessionState.Joined
                 # TODO send joininfo
-                print(usermsg['room_id'])
+                logger.info(f"user joined room id: {usermsg['room_id']}")
                 joininfo = ServerMessage(
                     type=ServerMessageType.JoinInfo,
                     room_id=usermsg['room_id'],
@@ -95,18 +103,21 @@ async def websocket_handler(request):
                 )
                 await sess.player.send_message(joininfo)
             elif sess.state == SessionState.Joined:
-               sess.game.received_messages.append(usermsg)
+                logger.info('received new message from joined player')
+                sess.game.received_messages.append(usermsg)
 
         elif msg.type == WSMsgType.ERROR:
-            print("error: {}".format(ws.exception()))
-    print(">websocket closed")
+            logger.error("error: {}".format(ws.exception()))
+    logger.info("websocket closed")
     return ws
+
 
 async def start_background_tasks(app):
     app['gameserver'] = app.loop.create_task(gameserver_loop())
 
+
 async def gameserver_loop():
-    print('starting gameserver loop')
+    logger.info('starting gameserver loop')
     while True:
         for game in ROOMS.values():
             game.get_inputs()
@@ -119,5 +130,7 @@ app = web.Application()
 app.add_routes([web.get('/ws', websocket_handler)])
 
 if __name__ == '__main__':
+    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+    logger.info('starting server')
     app.on_startup.append(start_background_tasks)
     web.run_app(app)

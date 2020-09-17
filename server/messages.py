@@ -1,20 +1,26 @@
+import logging
 from enum import Enum
 from struct import pack, unpack
 
+logger = logging.getLogger(__name__)
+
+
 class UserMessageType(Enum):
-    Join        = 1
-    Move        = 2
-    PlaceBomb   = 3
+    Join = 1
+    Move = 2
+    PlaceBomb = 3
+
 
 class ServerMessageType(Enum):
-    JoinInfo        = 1
-    KickOrReject    = 2
-    NewPlayer       = 3
-    DelPlayer       = 4
-    UpdatePlayer    = 5
-    NewBomb         = 6
-    ExplodeBomb     = 7
-    NewGame         = 8
+    JoinInfo = 1
+    KickOrReject = 2
+    NewPlayer = 3
+    DelPlayer = 4
+    UpdatePlayer = 5
+    NewBomb = 6
+    ExplodeBomb = 7
+    NewGame = 8
+
 
 class UserMessageParser:
 
@@ -37,6 +43,7 @@ class UserMessageParser:
             message['bomb_y'] = data[2]
         return message
 
+
 class ServerMessage:
 
     def __init__(self, type, **kwargs):
@@ -44,6 +51,7 @@ class ServerMessage:
         self.kwargs = kwargs
 
     def serialize(self) -> bytes:
+        logger.info(f'packing: {self.type} {self.kwargs}')
         data = pack('!B', self.type.value)
         if self.type == ServerMessageType.JoinInfo:
             data += pack('!H', self.kwargs['room_id'])
@@ -78,5 +86,8 @@ class ServerMessage:
             data += pack('!B', self.kwargs['bomb_y'])
         elif self.type == ServerMessageType.NewGame:
             data += pack('!B', self.kwargs['time_left'])
-        print(f'- sending: {data}')
+        logger.info(f'sending: {data}')
         return data
+
+    def __str__(self):
+        return "type:{} kwargs:{}".format(self.type, self.kwargs)
