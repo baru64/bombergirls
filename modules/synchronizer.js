@@ -1,3 +1,6 @@
+import { GameState } from './user.js';
+import { Game } from './game.js';
+
 const UserMessageType = {
   Join: 1,     // room id, nickname
   Move: 2,     // direction
@@ -161,26 +164,39 @@ function Queue() {
 }
 
 class Synchronizer {
-  constructor(url, main_callback, room_id, nickname) {
-    this.ws = new WebSocket(url);
+  constructor(url, user) {
+    this.ws = null;
+    this.receivedMessages = new Queue();
+    this.in_game = false;
+    this.url = url;
+    this.user = user;
+    this.room_id = user.room_id;
+    this.nickname = user.nickname;
+  }
+
+  disconnect() {
+    this.ws.close();
+  }
+
+  connect(game_callback) {
+    this.ws = new WebSocket(this.url);
     this.ws.binaryType = "arraybuffer";
     let synchronizer = this;
     this.ws.addEventListener('open', function (event) {
       console.log('websocket open');
-      let join_msg = new UserJoinMessage(room_id, nickname); // TODO: TEMPORARY FIX
+      let join_msg = new UserJoinMessage(this.room_id, this.nickname); // TODO: TEMPORARY FIX
       console.log('sending join message');
       synchronizer.sendMessage(join_msg);
     });
     this.ws.addEventListener('close', function (event) {
       console.log('websocket close');
+      this.user.state = GameState.inMainMenu;
     });
     this.ws.addEventListener('message', function (event) {
       console.log('message from server:', event.data);
       synchronizer.deserializeMessage(event.data);
-      if (!synchronizer.in_game) main_callback();
+      if (!synchronizer.in_game) game_callback();
     });
-    this.receivedMessages = new Queue();
-    this.in_game = false;
   }
 
   sendMessage(message) {

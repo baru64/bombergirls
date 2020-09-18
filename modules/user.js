@@ -1,4 +1,5 @@
 import { Menu } from './menu.js';
+import { Game } from './game.js';
 
 const GameState = {
   inGame: 1,
@@ -39,6 +40,9 @@ class User {
           break;
         case "Space":
           this.player.placeBomb();
+          break;
+        case "Escape":
+          this.state = GameState.inMainMenu;
           break;
       }
     } else if (this.state == GameState.inMainMenu) {

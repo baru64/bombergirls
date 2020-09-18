@@ -1,11 +1,16 @@
 import logging
 
+from aiohttp.web import WebSocketResponse
+
+from .messages import ServerMessage
+
 logger = logging.getLogger(__name__)
 
 
 class Player:
 
-    def __init__(self, id, x, y, color, ws, stats=0):
+    def __init__(self, id: int, x: int, y: int, color: int,
+                 ws: WebSocketResponse, stats: int = 0):
         self.id = id
         self.x = x
         self.y = y
@@ -14,8 +19,12 @@ class Player:
         self.stats = stats
         self.ws = ws
         self.nickname = 'mike'
+        self.disconnected = False
 
-    async def send_message(self, msg):
+    async def send_message(self, msg: ServerMessage):
+        if self.disconnected:
+            logger.info(f'attempt to send to disconnected player[{self.id}]')
+            return
         logger.info('sending message: {} to player[{}]'.format(msg, self.id))
         try:
             await self.ws.send_bytes(msg.serialize())

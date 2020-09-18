@@ -46,9 +46,9 @@ class UserMessageParser:
 
 class ServerMessage:
 
-    def __init__(self, type, **kwargs):
+    def __init__(self, type: int, **kwargs):
         self.type = type
-        self.kwargs = kwargs
+        self.kwargs: dict = kwargs
 
     def serialize(self) -> bytes:
         data = pack('!B', self.type.value)

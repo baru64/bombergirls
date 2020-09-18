@@ -38,8 +38,13 @@ function game_loop(screen) {
     screen.clear();
     game.render(screen);
     game.updateState();
+    if (user.state == GameState.inMainMenu) {
+      clearInterval(main_loop_interval);
+      synchronizer.disconnect();
+      menu_loop(screen);
+    }
   }
-  setInterval(main_loop, 25);
+  let main_loop_interval = setInterval(main_loop, 25);
 }
 
 let screen = new Canvas('canvas', document.body, 700, 450);
@@ -64,8 +69,8 @@ async function menu_loop(screen) {
   } 
   if (user.state == GameState.inGame) {
     // TODO main loop callback, onopen->send join->onmessage->start main
-    synchronizer = new Synchronizer("ws://localhost:8080/ws",
-      game_loop_callback, user.room_id, user.nickname);
+    synchronizer = new Synchronizer("ws://localhost:8080/ws", user);
+    synchronizer.connect(game_loop_callback);
   }
 }
 console.log(screen);

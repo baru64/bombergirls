@@ -7,7 +7,7 @@ import time
 from aiohttp import web, WSMsgType
 
 from server.game import Game
-# from server.player import Player
+from server.player import Player
 from server.messages import (
     UserMessageParser,
     UserMessageType,
@@ -36,10 +36,10 @@ class SessionState(Enum):
 class Session:
 
     def __init__(self, ws):
-        self.ws = ws
-        self.state = SessionState.NotJoined
-        self.player = None
-        self.game = None
+        self.ws: web.WebSocketResponse = ws
+        self.state: SessionState = SessionState.NotJoined
+        self.player: Player = None
+        self.game: Game = None
 
 
 ROOMS = {}  # room_id: game instance
@@ -119,6 +119,7 @@ async def websocket_handler(request):
         elif msg.type == WSMsgType.ERROR:
             logger.error("error: {}".format(ws.exception()))
     logger.info("websocket closed")
+    sess.player.disconnected = True
     # TODO delPlayer?
     # set player to disconected, if disconected until new_game delete
     return ws
