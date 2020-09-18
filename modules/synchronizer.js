@@ -161,13 +161,13 @@ function Queue() {
 }
 
 class Synchronizer {
-  constructor(url, main_callback) {
+  constructor(url, main_callback, room_id, nickname) {
     this.ws = new WebSocket(url);
     this.ws.binaryType = "arraybuffer";
     let synchronizer = this;
     this.ws.addEventListener('open', function (event) {
       console.log('websocket open');
-      let join_msg = new UserJoinMessage(1, 'changeme'); // TODO: TEMPORARY FIX
+      let join_msg = new UserJoinMessage(room_id, nickname); // TODO: TEMPORARY FIX
       console.log('sending join message');
       synchronizer.sendMessage(join_msg);
     });

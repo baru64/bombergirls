@@ -67,12 +67,14 @@ async def websocket_handler(request):
                     usermsg['type'] == UserMessageType.Join):
                 if usermsg['room_id'] in ROOMS:
                     sess.player = ROOMS[usermsg['room_id']].add_player(ws)
+                    sess.player.nickname = usermsg['player_nickname']
                     user_parser.player = sess.player
                     sess.game = ROOMS[usermsg['room_id']]
                     sess.state = SessionState.Joined
                 else:
                     game = Game()
                     sess.player = game.add_player(ws)
+                    sess.player.nickname = usermsg['player_nickname']
                     user_parser.player = sess.player
                     ROOMS[usermsg['room_id']] = game
                     sess.game = game

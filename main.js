@@ -1,15 +1,10 @@
 import { Canvas } from './modules/canvas.js';
 import { Game } from './modules/game.js';
 import { Player } from './modules/player.js';
-import { User } from './modules/user.js';
+import { User, GameState } from './modules/user.js';
 import { Synchronizer, UserJoinMessage, ServerMessageType } from './modules/synchronizer.js';
 
-function main(screen) {
-  let user = new User('joe');
-  // user input
-  document.addEventListener("keydown", function(e) {
-    user.keyboardHandler(e);
-  }, false);
+function game_loop(screen) {
   let game = null;
   let player = null;
   // let usersPlayer = new Player( 123, 32, 32, 2);
@@ -24,7 +19,7 @@ function main(screen) {
         player = new Player(msg.player_id, msg.player_x, msg.player_y, msg.player_color);
         player.isDead = msg.is_player_dead;
         player.stats = msg.player_stats;
-        player.nickname = '123456789abcdef';
+        player.nickname = user.nickname;
         game = new Game([player], synchronizer, user);
         game.time_left = msg.time_left;
         synchronizer.in_game = true;
@@ -49,9 +44,29 @@ function main(screen) {
 
 let screen = new Canvas('canvas', document.body, 700, 450);
 
+let user = new User('joe');
+// user input
+document.addEventListener("keydown", function(e) {
+  user.keyboardHandler(e);
+}, false);
+
 screen.create();
-function main_callback() {
-  main(screen);
+function game_loop_callback() {
+  game_loop(screen);
 }
-// TODO main loop callback, onopen->send join->onmessage->start main
-let synchronizer = new Synchronizer("ws://localhost:8080/ws", main_callback);
+
+let synchronizer = null;
+
+async function menu_loop(screen) {
+  while (user.state == GameState.inMainMenu) {
+    user.menu.draw(screen);
+    await new Promise(r => setTimeout(r, 100));
+  } 
+  if (user.state == GameState.inGame) {
+    // TODO main loop callback, onopen->send join->onmessage->start main
+    synchronizer = new Synchronizer("ws://localhost:8080/ws",
+      game_loop_callback, user.room_id, user.nickname);
+  }
+}
+console.log(screen);
+menu_loop(screen);

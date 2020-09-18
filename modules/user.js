@@ -1,3 +1,5 @@
+import { Menu } from './menu.js';
+
 const GameState = {
   inGame: 1,
   inMainMenu: 2
@@ -10,8 +12,9 @@ class User {
     this.nickname = nickname;
     this.player = null;
     this.room_id = 0;
-    this.state = GameState.inGame;
+    this.state = GameState.inMainMenu;
     this.selectedRoom = 0;
+    this.menu = new Menu();
   }
 
   setPlayer(player) {
@@ -20,7 +23,7 @@ class User {
   }
 
   keyboardHandler(e) {
-    if (this.state = GameState.inGame) {
+    if (this.state == GameState.inGame) {
       switch (e.code) {
         case "ArrowLeft":
           this.player.move('left');
@@ -38,8 +41,14 @@ class User {
           this.player.placeBomb();
           break;
       }
+    } else if (this.state == GameState.inMainMenu) {
+      this.menu.getInput(e);
+      if (this.menu.enterGame == true) {
+        this.nickname = this.menu.nickname;
+        this.room_id = this.menu.room_id;
+        this.state = GameState.inGame;
+      }
     }
-
   }
 }
 
