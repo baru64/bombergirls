@@ -138,6 +138,7 @@ async def start_background_tasks(app):
 async def gameserver_loop():
     logger.info('starting gameserver loop')
     while True:
+        t = time.time()
         empty_games: List[int] = []
         for key, game in ROOMS.items():
             game.get_inputs()
@@ -147,7 +148,10 @@ async def gameserver_loop():
                 empty_games.append(key)
         for key in empty_games:
             del ROOMS[key]
-        await asyncio.sleep(0.05)
+        sleep_time = 0.03 - (time.time() - t)
+        logger.info(f'sleep time: {sleep_time}')
+        if sleep_time > 0.0:
+            await asyncio.sleep(sleep_time)
 
 
 app = web.Application()
