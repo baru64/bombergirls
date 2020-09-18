@@ -170,8 +170,6 @@ class Synchronizer {
     this.in_game = false;
     this.url = url;
     this.user = user;
-    this.room_id = user.room_id;
-    this.nickname = user.nickname;
   }
 
   disconnect() {
@@ -184,13 +182,16 @@ class Synchronizer {
     let synchronizer = this;
     this.ws.addEventListener('open', function (event) {
       console.log('websocket open');
-      let join_msg = new UserJoinMessage(this.room_id, this.nickname); // TODO: TEMPORARY FIX
+      let join_msg = new UserJoinMessage(
+        synchronizer.user.room_id,
+        synchronizer.user.nickname
+      ); // TODO: TEMPORARY FIX
       console.log('sending join message');
       synchronizer.sendMessage(join_msg);
     });
     this.ws.addEventListener('close', function (event) {
       console.log('websocket close');
-      this.user.state = GameState.inMainMenu;
+      synchronizer.user.state = GameState.inMainMenu;
     });
     this.ws.addEventListener('message', function (event) {
       console.log('message from server:', event.data);

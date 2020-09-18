@@ -165,7 +165,7 @@ class Game:
         self.players.remove(player)
         self.messages_to_send.append(del_player)
 
-    def add_player(self, ws: WebSocketResponse) -> Player:
+    def add_player(self, ws: WebSocketResponse, nickname: str) -> Player:
         starting_pos = [
             (32, 32),
             (32*(self.map.size[0]-2), 32),
@@ -174,6 +174,7 @@ class Game:
         ]
         px, py = starting_pos[len(self.players)]
         player = Player(self.counter, px, py, len(self.players), ws, stats=0)
+        player.nickname = nickname
         if len(self.players) > 1:
             player.is_dead = True
         self.counter += 1
