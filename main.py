@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Dict, List
 import asyncio
 import logging
 import sys
@@ -42,7 +43,7 @@ class Session:
         self.game: Game = None
 
 
-ROOMS = {}  # room_id: game instance
+ROOMS: Dict[int, Game] = {}  # room_id: game instance
 
 # TODO: preserve state
 
@@ -116,14 +117,17 @@ async def websocket_handler(request):
                             await sess.player.send_message(sync_player_msg)
             elif sess.state == SessionState.Joined:
                 logger.info('received new message from joined player')
-                sess.game.received_messages.append(usermsg)
+                if not sess.player.is_dead:
+                    sess.game.received_messages.append(usermsg)
+                else:
+                    logger.info(
+                        f'message from dead player[{sess.player.id}] ignored')
 
         elif msg.type == WSMsgType.ERROR:
             logger.error("error: {}".format(ws.exception()))
     logger.info("websocket closed")
-    sess.player.disconnected = True
-    # TODO delPlayer?
     # set player to disconected, if disconected until new_game delete
+    sess.player.disconnected = True
     return ws
 
 
@@ -134,10 +138,15 @@ async def start_background_tasks(app):
 async def gameserver_loop():
     logger.info('starting gameserver loop')
     while True:
-        for game in ROOMS.values():
+        empty_games: List[int] = []
+        for key, game in ROOMS.items():
             game.get_inputs()
             game.step()
             await game.update_players()
+            if len(game.players) == 0:
+                empty_games.append(key)
+        for key in empty_games:
+            del ROOMS[key]
         await asyncio.sleep(0.05)
 
 

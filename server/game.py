@@ -35,6 +35,8 @@ class Game:
             self.new_game()
 
     def move_player(self, player: Player, direction: int):
+        if player.is_dead:
+            return
         x, y = player.x, player.y
         if direction == 1:
             y -= self.player_move_size
@@ -194,6 +196,10 @@ class Game:
         return player
 
     def new_game(self):
+        # delete disconnected players
+        for player in self.players:
+            if player.disconnected:
+                self.remove_player(player)
         # set new starting positions
         logger.info('starting new game')
         starting_pos = [
