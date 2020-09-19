@@ -50,6 +50,14 @@ class Canvas {
     this.ctx.fillText(text, x, y);
   }
 
+  drawLogo(x,y) {
+    this.ctx.strokeStyle = 'DeepPink';
+    this.ctx.fillStyle = 'Cyan';
+    this.ctx.font = '80px Concert One';
+    this.ctx.strokeText('BOMBERGIRLS', x+5, y+5);
+    this.ctx.fillText('BOMBERGIRLS', x, y);
+  }
+
   drawRectangle(color, x, y, width, heigth) {
     this.ctx.fillStyle = color;
     this.ctx.fillRect(x, y, width, heigth);

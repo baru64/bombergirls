@@ -1,5 +1,6 @@
 import { GameState } from './user.js';
 import { Game } from './game.js';
+import { Tile, TileType } from './map.js';
 
 const UserMessageType = {
   Join: 1,     // room id, nickname
@@ -16,24 +17,27 @@ const ServerMessageType = {
   NewBomb: 6,       // bomb position
   ExplodeBomb: 7,   // bomb position
   NewGame: 8,
+  MapUpdate: 9
 }
 
 class UserJoinMessage {
-  constructor(room_id, nickname) {
+  constructor(room_id, nickname, player_code = 0) {
     this.type = UserMessageType.Join;
     this.room_id = room_id;
     this.nickname = nickname; // maxlen: 16
+    this.player_code = player_code;
   }
   serialize() {
-    const buffer = new ArrayBuffer(3);
+    const buffer = new ArrayBuffer(7);
     const view = new DataView(buffer);
     view.setUint8(0, this.type);
     view.setUint16(1, this.room_id);
+    view.setUint32(3, this.player_code);
     const encoder = new TextEncoder();
     const encoded_nickname = encoder.encode(this.nickname);
-    const data = new Uint8Array(3+16);
+    const data = new Uint8Array(7+16);
     data.set(new Uint8Array(buffer), 0);
-    data.set(new Uint8Array(encoded_nickname), 3);
+    data.set(new Uint8Array(encoded_nickname), 7);
     return data.buffer;
   }
 }
@@ -81,6 +85,7 @@ class ServerMessage {
   fromBinary(data) {
     const view = new DataView(data);
     this.type = view.getUint8(0);
+    console.log("fromBinary! type:" + this.type);
     switch (this.type) {
       case ServerMessageType.JoinInfo:
         this.room_id = view.getUint16(1);
@@ -92,6 +97,7 @@ class ServerMessage {
         // player is dead when joins during game or joins first
         this.is_player_dead = view.getUint8(11);
         this.time_left = view.getUint8(12);
+        this.player_code = view.getUint32(13);
         break;
       case ServerMessageType.KickOrReject:
         // no info, just reject join or kick from room
@@ -128,6 +134,28 @@ class ServerMessage {
       case ServerMessageType.NewGame:
         // newplayer/updateplayer messages will follow this
         this.time_left = view.getUint8(1);
+        break;
+      case ServerMessageType.MapUpdate:
+        this.tiles_w = view.getUint8(1);
+        this.tiles_h = view.getUint8(2);
+        let readptr = 3;
+        this.tiles = new Map();
+        for (let h=0; h < this.tiles_h; ++h) {
+          for (let w=0; w < this.tiles_w; ++w) {
+            let tile = view.getUint8(readptr);
+            readptr += 1;
+            switch (tile) {
+              case 0: // empty
+                break;
+              case 1: // block
+                this.tiles.set(h*this.tiles_w+w, new Tile(w, h, TileType.Block));
+                break;
+              case 2: // wall
+                this.tiles.set(h*this.tiles_w+w, new Tile(w, h, TileType.Wall));
+                break;
+            }
+          }
+        }
         break;
       default:
         // something went wrong
@@ -184,7 +212,8 @@ class Synchronizer {
       console.log('websocket open');
       let join_msg = new UserJoinMessage(
         synchronizer.user.room_id,
-        synchronizer.user.nickname
+        synchronizer.user.nickname,
+        synchronizer.user.player_code
       ); // TODO: TEMPORARY FIX
       console.log('sending join message');
       synchronizer.sendMessage(join_msg);

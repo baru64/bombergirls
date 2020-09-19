@@ -16,6 +16,7 @@ class User {
     this.state = GameState.inMainMenu;
     this.selectedRoom = 0;
     this.menu = new Menu();
+    this.player_code = 0;
   }
 
   setPlayer(player) {
@@ -43,6 +44,7 @@ class User {
           break;
         case "Escape":
           this.state = GameState.inMainMenu;
+          this.player_code = 0;
           break;
       }
     } else if (this.state == GameState.inMainMenu) {

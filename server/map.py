@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import List, Tuple
 
 
 class Tile(Enum):
@@ -10,9 +11,9 @@ class Tile(Enum):
 class GameMap:
 
     def __init__(self, x=15, y=13, tile_size=32):
-        self.size = (x, y)
-        self.tile_size = tile_size
-        self.tiles = []
+        self.size: Tuple[int, int] = (x, y)
+        self.tile_size: int = tile_size
+        self.tiles: List[Tile] = []
         self._gen_tiles()
 
     def _gen_tiles(self):

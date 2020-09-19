@@ -148,15 +148,16 @@ class Game:
             self.new_game()
         elif len(self.players) > 1:
             for player in self.players:
-                if not player.is_dead:
+                if player.is_dead is False:
                     players_alive += 1
-            if players_alive == 1:
-                for player in self.players:
-                    if not player.is_dead:
-                        player.stats += 1
-                        self.new_game()
-            elif players_alive == 0:
-                self.new_game()
+        if players_alive == 1:
+            for player in self.players:
+                if player.is_dead is False:
+                    logger.info(f'adding stats for dead={player.is_dead}')
+                    player.stats = player.stats + 1
+            self.new_game()
+        elif players_alive == 0:
+            self.new_game()
 
     def remove_player(self, player: Player):
         # remove player and add message

@@ -1,4 +1,5 @@
 import logging
+import random
 
 from aiohttp.web import WebSocketResponse
 
@@ -20,6 +21,7 @@ class Player:
         self.ws = ws
         self.nickname = 'mike'
         self.disconnected = False
+        self.code = random.randint(1, 4000000000)
 
     async def send_message(self, msg: ServerMessage):
         if self.disconnected:

@@ -4,6 +4,10 @@ import { Player } from './modules/player.js';
 import { User, GameState } from './modules/user.js';
 import { Synchronizer, UserJoinMessage, ServerMessageType } from './modules/synchronizer.js';
 
+function time_now() {
+  return Date.now() / 1000;
+}
+
 function game_loop(screen) {
   let game = null;
   let player = null;
@@ -23,6 +27,13 @@ function game_loop(screen) {
         game = new Game([player], synchronizer, user);
         game.time_left = msg.time_left;
         synchronizer.in_game = true;
+        // set session storage
+        sessionStorage.setItem("round_end",
+          Math.floor(time_now() + game.time_left));
+        sessionStorage.setItem("room_id", user.room_id);
+        sessionStorage.setItem("nickname", user.nickname);
+        sessionStorage.setItem("player_code", msg.player_code);
+        console.log('player_code: ' + msg.player_code);
       }
     }
     console.log('wtf');
@@ -74,4 +85,22 @@ async function menu_loop(screen) {
   }
 }
 console.log(screen);
+
+// restore previous user settings
+if (sessionStorage.getItem('room_id') &&
+    sessionStorage.getItem('nickname') &&
+    sessionStorage.getItem('player_code') &&
+    sessionStorage.getItem('round_end')) {
+  let round_end = sessionStorage.getItem('round_end');
+  user.menu.room_id = sessionStorage.getItem('room_id');
+  user.menu.nickname = sessionStorage.getItem('nickname');
+  if (time_now() < round_end) {
+    console.log('rejoin last game');
+    user.room_id = sessionStorage.getItem('room_id');
+    user.nickname = sessionStorage.getItem('nickname');
+    user.player_code = sessionStorage.getItem('player_code');
+    user.state = GameState.inGame;
+  }
+}
+
 menu_loop(screen);

@@ -66,7 +66,27 @@ async def websocket_handler(request):
             usermsg = user_parser.from_binary(msg.data)
             if (sess.state == SessionState.NotJoined and
                     usermsg['type'] == UserMessageType.Join):
-                if usermsg['room_id'] in ROOMS:
+                if usermsg['player_code'] != 0 and usermsg['room_id'] in ROOMS:
+                    logger.info('player rejoining game')
+                    sess.player = None
+                    for player in ROOMS[usermsg['room_id']].players:
+                        if player.code == usermsg['player_code']:
+                            sess.player = player
+                            user_parser.player = sess.player
+                            break
+                    if sess.player is not None:
+                        sess.player.ws = ws
+                        sess.player.disconnected = False
+                        sess.game = ROOMS[usermsg['room_id']]
+                        sess.state = SessionState.Joined
+                    else:
+                        sess.player = ROOMS[usermsg['room_id']] \
+                                    .add_player(ws, usermsg['player_nickname'])
+                        # sess.player.nickname = usermsg['player_nickname']
+                        user_parser.player = sess.player
+                        sess.game = ROOMS[usermsg['room_id']]
+                        sess.state = SessionState.Joined
+                elif usermsg['room_id'] in ROOMS:
                     sess.player = ROOMS[usermsg['room_id']] \
                                     .add_player(ws, usermsg['player_nickname'])
                     # sess.player.nickname = usermsg['player_nickname']
@@ -94,8 +114,10 @@ async def websocket_handler(request):
                     player_color=sess.player.color,
                     is_player_dead=sess.player.is_dead,
                     time_left=int(sess.game.round_length
-                                  - (time.time() - sess.game.start_time))
+                                  - (time.time() - sess.game.start_time)),
+                    player_code=sess.player.code
                 )
+                logger.debug(f'player_code: {sess.player.code}')
                 await sess.player.send_message(joininfo)
                 if len(sess.game.players) > 1:
                     # add existing players to new players context
@@ -115,6 +137,15 @@ async def websocket_handler(request):
                                 player_nickname=another_player.nickname
                             )
                             await sess.player.send_message(sync_player_msg)
+                    # send map to joining player
+                    map_update_msg = ServerMessage(
+                        type=ServerMessageType.MapUpdate,
+                        map_size=sess.game.map.size,
+                        map_tiles=sess.game.map.tiles
+                    )
+                    await sess.player.send_message(map_update_msg)
+                    logger.info('sent map update')
+
             elif sess.state == SessionState.Joined:
                 logger.info('received new message from joined player')
                 if not sess.player.is_dead:
@@ -149,7 +180,6 @@ async def gameserver_loop():
         for key in empty_games:
             del ROOMS[key]
         sleep_time = 0.03 - (time.time() - t)
-        logger.info(f'sleep time: {sleep_time}')
         if sleep_time > 0.0:
             await asyncio.sleep(sleep_time)
 

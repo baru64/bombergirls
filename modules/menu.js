@@ -11,26 +11,26 @@ class Menu {
   draw(screen) {
     screen.drawRectangle('black', 0, 0, screen.width, screen.height);
     // header
-    screen.drawText('60px sans', 'white', 80, screen.height/3, 'Bomber Girls');
+    screen.drawLogo(100, screen.height/3);
     // inputs
     if (this.menu_selection == 0) {
       screen.drawText('16px sans', 'lightgray',
-        screen.width/2-180,(screen.height/3)*2, 'nickname:');
+        screen.width/2-120,(screen.height/3)*2, 'nickname:');
       screen.drawText('16px sans', 'gray',
-        screen.width/2-180, (screen.height/3)*2+20, 'room:');
+        screen.width/2-120, (screen.height/3)*2+20, 'room:');
       screen.drawText('16px sans', 'orange',
-        screen.width/2-80, (screen.height/3)*2, this.text_input);
+        screen.width/2-20, (screen.height/3)*2, this.text_input);
       screen.drawText('16px sans', 'white',
-        screen.width/2-80, (screen.height/3)*2+20, this.room_input);
+        screen.width/2-20, (screen.height/3)*2+20, this.room_input);
     } else {
       screen.drawText('16px sans', 'gray',
-        screen.width/2-180,(screen.height/3)*2, 'nickname:');
+        screen.width/2-120,(screen.height/3)*2, 'nickname:');
       screen.drawText('16px sans', 'lightgray',
-        screen.width/2-180, (screen.height/3)*2+20, 'room:');
+        screen.width/2-120, (screen.height/3)*2+20, 'room:');
       screen.drawText('16px sans', 'white',
-        screen.width/2-80,(screen.height/3)*2, this.text_input);
+        screen.width/2-20,(screen.height/3)*2, this.text_input);
       screen.drawText('16px sans', 'orange',
-        screen.width/2-80, (screen.height/3)*2+20, this.room_input);
+        screen.width/2-20, (screen.height/3)*2+20, this.room_input);
     }
     // footer
     screen.drawText('8px sans', 'white', screen.width/2-10, screen.height-5, 'v0.0.1');

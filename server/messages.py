@@ -20,6 +20,7 @@ class ServerMessageType(Enum):
     NewBomb = 6
     ExplodeBomb = 7
     NewGame = 8
+    MapUpdate = 9
 
 
 class UserMessageParser:
@@ -33,7 +34,8 @@ class UserMessageParser:
         if data[0] == UserMessageType.Join.value:
             message['type'] = UserMessageType.Join
             message['room_id'] = unpack('!H', data[1:3])[0]
-            message['player_nickname'] = data[3:].decode('utf-8')
+            message['player_code'] = unpack('!I', data[3:7])[0]
+            message['player_nickname'] = data[7:].decode('utf-8')
         elif data[0] == UserMessageType.Move.value:
             message['type'] = UserMessageType.Move
             message['direction'] = data[1]
@@ -61,6 +63,7 @@ class ServerMessage:
             data += pack('!B', self.kwargs['player_color'])
             data += pack('!B', self.kwargs['is_player_dead'])
             data += pack('!B', self.kwargs['time_left'])
+            data += pack('!I', self.kwargs['player_code'])
         elif self.type == ServerMessageType.NewPlayer:
             data += pack('!H', self.kwargs['player_id'])
             data += pack('!H', self.kwargs['player_x'])
@@ -85,6 +88,11 @@ class ServerMessage:
             data += pack('!B', self.kwargs['bomb_y'])
         elif self.type == ServerMessageType.NewGame:
             data += pack('!B', self.kwargs['time_left'])
+        elif self.type == ServerMessageType.MapUpdate:
+            data += pack('!B', self.kwargs['map_size'][0])
+            data += pack('!B', self.kwargs['map_size'][1])
+            for tile in self.kwargs['map_tiles']:
+                data += pack('!B', tile.value)
         logger.info(f'sending: {data}')
         return data
 

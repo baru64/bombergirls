@@ -14,7 +14,6 @@ class GameMap {
     this.tiles = new Map();
     this.size = {x: 15, y: 13};
     this.generateTiles();
-    this.firstDraw = true;
   }
 
   generateTiles() {
@@ -35,10 +34,8 @@ class GameMap {
   draw(screen) {
     screen.drawRectangle('darkgreen', 0, 0, this.size.x*32, this.size.y*32);
     this.tiles.forEach((tile) => {
-      if (this.firstDraw) tile.draw(screen);
-      else if (tile.type != TileType.Block) tile.draw(screen);
+      tile.draw(screen);
     });
-
   }
 }
 
@@ -67,4 +64,4 @@ class WallTile extends Tile {
   }
 }
 
-export { GameMap, TileType };
+export { GameMap, TileType, Tile };

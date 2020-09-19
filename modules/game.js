@@ -153,6 +153,7 @@ class Game {
     // apply state changes
     while(this.sync.messagesInQueue()) {
       let message = this.sync.recvMessage();
+      console.log('MESSAGE! TYPE: '+ message.type);
       switch (message.type) {
         case ServerMessageType.JoinInfo:
           this.user.room_id = message.room_id;
@@ -210,6 +211,13 @@ class Game {
           this.map = new GameMap();
           this.time_left = message.time_left;
           this.start_time = time_now();
+          sessionStorage.setItem("round_end",
+            Math.floor(this.start_time + this.time_left));
+          break;
+        case ServerMessageType.MapUpdate:
+          console.log('received map update');
+          this.map.size = {x: message.tiles_w, y:message.tiles_h};
+          this.map.tiles = message.tiles;
           break;
       }
     }
